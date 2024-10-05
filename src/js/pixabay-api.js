@@ -5,7 +5,7 @@ import { page } from '../main';
 export async function getPictures(query, currentPage) {
   const BASE_URL = 'https://pixabay.com/api/';
   const params = new URLSearchParams({
-    key: '42978821-e3c6f538b5791c0a766c3ba19',
+    key: '45645042-c9b2fc3a6d24b970e9e620bb9',
     q: query,
     image_type: 'photo',
     orientation: 'horizontal',
