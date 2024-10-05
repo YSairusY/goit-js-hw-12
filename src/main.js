@@ -26,7 +26,6 @@ async function handleSubmit(event) {
   event.preventDefault();
   inputValue = event.currentTarget.elements.input.value.trim();
   gallery.innerHTML = '';
-  page;
   if (!inputValue) {
     iziToast.warning({
       title: 'Caution',
@@ -88,10 +87,12 @@ loadBtn.addEventListener('click', handleMore);
 async function handleMore(event) {
   page += 1;
   showLoader();
+
   try {
     const newImages = await getPictures(inputValue, page);
     const markup = renderElements(newImages);
     gallery.insertAdjacentHTML('beforeend', markup);
+
     initializeSlider();
     myScroll();
     hideLoader();
@@ -104,14 +105,14 @@ async function handleMore(event) {
       });
       loadBtn.style.display = 'none';
     }
+    
   } catch (error) {
+    hideLoader();
     iziToast.error({
       color: 'red',
       message: `❌ Error fetching more images: ${error.message}`,
       position: 'top',
     });
-  } finally {
-    hideLoader();
   }
 }
 
