@@ -43,7 +43,7 @@ async function handleSubmit(event) {
   try {
     const images = await getPictures(inputValue);
     hideLoader();
-    if (images.length === 0) {
+    if (images === undefined || images.length === 0) {
       iziToast.error({
         title: 'Search result',
         message:
