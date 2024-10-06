@@ -1,5 +1,4 @@
 import { getPictures } from './js/pixabay-api.js';
-import { renderElement } from './js/render-functions.js';
 import { renderElements } from './js/render-functions.js';
 import { perPage } from './js/pixabay-api.js';
 
@@ -101,7 +100,7 @@ async function handleMore(event) {
       iziToast.warning({
         title: 'End of Results',
         message: `We're sorry, but you've reached the end of search results.`,
-        position: 'top',
+        position: 'topRight',
       });
       loadBtn.style.display = 'none';
     }
