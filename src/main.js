@@ -7,7 +7,7 @@ import 'izitoast/dist/css/iziToast.min.css';
 
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
-import css from './css/styles.css';
+
 
 const form = document.querySelector('.form');
 const button = document.querySelector('#search');
@@ -16,13 +16,13 @@ const loadBtn = document.querySelector('.load-btn');
 
 export let page = 1;
 let inputValue = '';
-
-hideLoadBtn();
+let totalHits = 0;
 
 form.addEventListener('submit', handleSubmit);
 
 async function handleSubmit(event) {
-  event.preventDefault();
+    event.preventDefault();
+    hideLoadBtn();
   inputValue = event.currentTarget.elements.input.value.trim();
   gallery.innerHTML = '';
   if (!inputValue) {
@@ -36,11 +36,10 @@ async function handleSubmit(event) {
 
   page = 1;
   gallery.innerHTML = '';
-  hideLoadBtn();
-
+  
   showLoader();
   try {
-    const images = await getPictures(inputValue, page);
+      const images = await getPictures(inputValue, page);
     hideLoader();
     if (images === undefined || images.length === 0) {
       iziToast.error({
@@ -50,13 +49,23 @@ async function handleSubmit(event) {
         position: 'topRight',
       });
       return;
-    }
+      }
+
+      totalHits = images.totalHits;
+     
     const markup = renderElements(images);
-    gallery.innerHTML = markup;
+      gallery.innerHTML = markup;
+
+       const totalPages = Math.ceil(totalHits / perPage);
+         if (page < totalPages) {
+         showLoadBtn();
+        }
+        else {
+             hideLoadBtn();
+        }
 
     initializeSlider();
 
-    showLoadBtn();
   } catch (error) {
     hideLoader();
     if (
@@ -76,8 +85,10 @@ async function handleSubmit(event) {
         position: 'topRight',
       });
     }
-  }
-
+    }
+    
+    
+  
   form.reset();
 }
 
@@ -93,16 +104,18 @@ async function handleMore(event) {
     gallery.insertAdjacentHTML('beforeend', markup);
 
     initializeSlider();
-    myScroll();
-    hideLoader();
-
-    if (newImages.length < perPage) {
+     myScroll();
+      hideLoader();
+      
+ const totalPages = Math.ceil(totalHits / perPage);
+    if (page >= totalPages) {
       iziToast.warning({
         title: 'End of Results',
         message: `We're sorry, but you've reached the end of search results.`,
         position: 'topRight',
       });
-      loadBtn.style.display = 'none';
+        hideLoadBtn()
+        
     }
     
   } catch (error) {

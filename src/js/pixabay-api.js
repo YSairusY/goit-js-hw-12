@@ -14,11 +14,7 @@ export async function getPictures(query, currentPage) {
     per_page: perPage,
   });
   const url = `${BASE_URL}?${params}`;
-
-  const images = await axios
-    .get(url)
-    .then(response => response.data.hits)
-    .catch(error => console.log(error));
-
-  return images;
+    const images = await axios
+        .get(url);
+  return images.data;
 }

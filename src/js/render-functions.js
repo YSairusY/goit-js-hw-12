@@ -38,5 +38,5 @@ export function renderElement({
 }
 
 export function renderElements(arr) {
-  return arr.map(renderElement).join('');
+  return arr.hits.map(renderElement).join('');
 }
