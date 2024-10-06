@@ -11,7 +11,6 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 import css from './css/styles.css';
 
 const form = document.querySelector('.form');
-const button = document.querySelector('#search');
 const gallery = document.querySelector('.gallery');
 const loadBtn = document.querySelector('.load-btn');
 
@@ -26,6 +25,7 @@ async function handleSubmit(event) {
   event.preventDefault();
   inputValue = event.currentTarget.elements.input.value.trim();
   gallery.innerHTML = '';
+  
   if (!inputValue) {
     iziToast.warning({
       title: 'Caution',
@@ -41,8 +41,9 @@ async function handleSubmit(event) {
 
   showLoader();
   try {
-    const images = await getPictures(inputValue);
+    const images = await getPictures(inputValue, page);
     hideLoader();
+
     if (images === undefined || images.length === 0) {
       iziToast.error({
         title: 'Search result',
@@ -52,31 +53,20 @@ async function handleSubmit(event) {
       });
       return;
     }
+
     const markup = renderElements(images);
     gallery.innerHTML = markup;
 
     initializeSlider();
 
-    showLoadBtn();
+    if (images.length < perPage) {
+      hideLoadBtn();
+    } else {
+      showLoadBtn();
+    }
   } catch (error) {
     hideLoader();
-    if (
-      error.name === 'TypeError' &&
-      error.message.includes('Failed to fetch')
-    ) {
-      iziToast.error({
-        title: 'Network Error',
-        message:
-          'Unable to connect. Please check your internet connection and try again.',
-        position: 'topRight',
-      });
-    } else {
-      iziToast.error({
-        title: 'Error',
-        message: `Error: ${error.message}`,
-        position: 'topRight',
-      });
-    }
+    handleError(error);
   }
 
   form.reset();
@@ -86,6 +76,7 @@ loadBtn.addEventListener('click', handleMore);
 
 async function handleMore(event) {
   page += 1;
+  loadBtn.style.display = 'none';
   showLoader();
 
   try {
@@ -103,16 +94,14 @@ async function handleMore(event) {
         message: `We're sorry, but you've reached the end of search results.`,
         position: 'top',
       });
-      loadBtn.style.display = 'none';
+      hideLoadBtn();
+    } else {
+      showLoadBtn();
     }
     
   } catch (error) {
     hideLoader();
-    iziToast.error({
-      color: 'red',
-      message: `❌ Error fetching more images: ${error.message}`,
-      position: 'top',
-    });
+    handleError(error);
   }
 }
 
@@ -154,4 +143,20 @@ function initializeSlider() {
     captionDelay: 250,
     captionsData: 'alt',
   }).refresh();
+}
+
+function handleError(error) {
+  if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+    iziToast.error({
+      title: 'Network Error',
+      message: 'Unable to connect. Please check your internet connection and try again.',
+      position: 'topRight',
+    });
+  } else {
+    iziToast.error({
+      title: 'Error',
+      message: `Error: ${error.message}`,
+      position: 'topRight',
+    });
+  }
 }
