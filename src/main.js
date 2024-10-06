@@ -68,7 +68,7 @@ async function handleSubmit(event) {
       iziToast.warning({
         title: 'End of Results',
         message: `We're sorry, but you've reached the end of search results.`,
-        position: 'top',
+        position: 'topRight',
       });
       hideLoadBtn();
     } else {
@@ -103,7 +103,7 @@ async function handleMore(event) {
       iziToast.warning({
         title: 'End of Results',
         message: `We're sorry, but you've reached the end of search results.`,
-        position: 'top',
+        position: 'topRight',
       });
       hideLoadBtn();
     } else {
