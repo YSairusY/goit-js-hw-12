@@ -16,6 +16,8 @@ const loadBtn = document.querySelector('.load-btn');
 
 export let page = 1;
 let inputValue = '';
+let totalHits = 0;
+let totalLoaded = 0;
 
 hideLoadBtn();
 
@@ -25,7 +27,7 @@ async function handleSubmit(event) {
   event.preventDefault();
   inputValue = event.currentTarget.elements.input.value.trim();
   gallery.innerHTML = '';
-  
+
   if (!inputValue) {
     iziToast.warning({
       title: 'Caution',
@@ -36,12 +38,15 @@ async function handleSubmit(event) {
   }
 
   page = 1;
+  totalLoaded = 0;
   gallery.innerHTML = '';
   hideLoadBtn();
 
   showLoader();
   try {
-    const images = await getPictures(inputValue, page);
+    const { hits: images, totalHits: total } = await getPictures(inputValue, page);
+    totalHits = total;
+    totalLoaded = images.length;
     hideLoader();
 
     if (images === undefined || images.length === 0) {
@@ -59,7 +64,12 @@ async function handleSubmit(event) {
 
     initializeSlider();
 
-    if (images.length < perPage) {
+    if (totalLoaded >= totalHits) {
+      iziToast.warning({
+        title: 'End of Results',
+        message: `We're sorry, but you've reached the end of search results.`,
+        position: 'top',
+      });
       hideLoadBtn();
     } else {
       showLoadBtn();
@@ -80,7 +90,8 @@ async function handleMore(event) {
   showLoader();
 
   try {
-    const newImages = await getPictures(inputValue, page);
+    const { hits: newImages } = await getPictures(inputValue, page);
+    totalLoaded += newImages.length;
     const markup = renderElements(newImages);
     gallery.insertAdjacentHTML('beforeend', markup);
 
@@ -88,11 +99,11 @@ async function handleMore(event) {
     myScroll();
     hideLoader();
 
-    if (newImages.length < perPage) {
+    if (totalLoaded >= totalHits) {
       iziToast.warning({
         title: 'End of Results',
         message: `We're sorry, but you've reached the end of search results.`,
-        position: 'topRight',
+        position: 'top',
       });
       hideLoadBtn();
     } else {
