@@ -11,13 +11,12 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 import css from './css/styles.css';
 
 const form = document.querySelector('.form');
+const button = document.querySelector('#search');
 const gallery = document.querySelector('.gallery');
 const loadBtn = document.querySelector('.load-btn');
 
 export let page = 1;
 let inputValue = '';
-let totalHits = 0;
-let totalLoaded = 0;
 
 hideLoadBtn();
 
@@ -27,7 +26,6 @@ async function handleSubmit(event) {
   event.preventDefault();
   inputValue = event.currentTarget.elements.input.value.trim();
   gallery.innerHTML = '';
-
   if (!inputValue) {
     iziToast.warning({
       title: 'Caution',
@@ -38,17 +36,13 @@ async function handleSubmit(event) {
   }
 
   page = 1;
-  totalLoaded = 0;
   gallery.innerHTML = '';
   hideLoadBtn();
 
   showLoader();
   try {
-    const { hits: images, totalHits: total } = await getPictures(inputValue, page);
-    totalHits = total;
-    totalLoaded = images.length;
+    const images = await getPictures(inputValue);
     hideLoader();
-
     if (images === undefined || images.length === 0) {
       iziToast.error({
         title: 'Search result',
@@ -58,25 +52,31 @@ async function handleSubmit(event) {
       });
       return;
     }
-
     const markup = renderElements(images);
     gallery.innerHTML = markup;
 
     initializeSlider();
 
-    if (totalLoaded >= totalHits) {
-      iziToast.warning({
-        title: 'End of Results',
-        message: `We're sorry, but you've reached the end of search results.`,
-        position: 'topRight',
-      });
-      hideLoadBtn();
-    } else {
-      showLoadBtn();
-    }
+    showLoadBtn();
   } catch (error) {
     hideLoader();
-    handleError(error);
+    if (
+      error.name === 'TypeError' &&
+      error.message.includes('Failed to fetch')
+    ) {
+      iziToast.error({
+        title: 'Network Error',
+        message:
+          'Unable to connect. Please check your internet connection and try again.',
+        position: 'topRight',
+      });
+    } else {
+      iziToast.error({
+        title: 'Error',
+        message: `Error: ${error.message}`,
+        position: 'topRight',
+      });
+    }
   }
 
   form.reset();
@@ -86,12 +86,10 @@ loadBtn.addEventListener('click', handleMore);
 
 async function handleMore(event) {
   page += 1;
-  loadBtn.style.display = 'none';
   showLoader();
 
   try {
-    const { hits: newImages } = await getPictures(inputValue, page);
-    totalLoaded += newImages.length;
+    const newImages = await getPictures(inputValue, page);
     const markup = renderElements(newImages);
     gallery.insertAdjacentHTML('beforeend', markup);
 
@@ -99,20 +97,22 @@ async function handleMore(event) {
     myScroll();
     hideLoader();
 
-    if (totalLoaded >= totalHits) {
+    if (newImages.length < perPage) {
       iziToast.warning({
         title: 'End of Results',
         message: `We're sorry, but you've reached the end of search results.`,
-        position: 'topRight',
+        position: 'top',
       });
-      hideLoadBtn();
-    } else {
-      showLoadBtn();
+      loadBtn.style.display = 'none';
     }
     
   } catch (error) {
     hideLoader();
-    handleError(error);
+    iziToast.error({
+      color: 'red',
+      message: `❌ Error fetching more images: ${error.message}`,
+      position: 'top',
+    });
   }
 }
 
@@ -154,20 +154,4 @@ function initializeSlider() {
     captionDelay: 250,
     captionsData: 'alt',
   }).refresh();
-}
-
-function handleError(error) {
-  if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-    iziToast.error({
-      title: 'Network Error',
-      message: 'Unable to connect. Please check your internet connection and try again.',
-      position: 'topRight',
-    });
-  } else {
-    iziToast.error({
-      title: 'Error',
-      message: `Error: ${error.message}`,
-      position: 'topRight',
-    });
-  }
 }
